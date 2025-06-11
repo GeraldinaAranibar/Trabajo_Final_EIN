@@ -1,0 +1,341 @@
+---
+title: "Pronóstico y Análisis de las Exportaciones de Bolivia (1992–2024) mediante ETS y ARIMA"
+author: "Nayeli Aranibar"
+date: "`r Sys.Date()`"
+output: rticles::sage_article
+bibliography: references.bib
+bibliographystyle: sageh
+---
+# 1. Introducción
+
+Las exportaciones representan un pilar fundamental de la economía boliviana, pues generan la mayor parte de las divisas que financian el gasto público y sustentan el equilibrio de la balanza de pagos. Entre 1992 y 2024, las ventas al exterior experimentaron ciclos de auge, impulsados principalmente por la demanda de hidrocarburos y minerales, y caídas abruptas derivadas de choques externos (crisis financieras globales, fluctuaciones de precios, interrupciones logísticas).
+
+Pronosticar con fiabilidad el comportamiento de las exportaciones mensuales resulta esencial para la planificación fiscal, permitiendo a las autoridades calibrar ingresos y reservas ante escenarios de precios altos o bajos. Formulación de políticas de diversificación, al identificar rutas de crecimiento sostenido e industrias emergentes. Gestión de riesgos macroeconómicos, pues anticipar posibles caídas facilita el diseño de contra cíclicos y la mitigación de shocks.
+
+A pesar de la relevancia estratégica, la literatura local carece de estudios que integren de manera sistemática modelos de suavizado exponencial (ETS) y de Box–Jenkins (ARIMA), junto con un análisis específico de los principales productos exportados. En este trabajo aclaramos dichas carencias.
+
+Con este enfoque integral, se busca no solo identificar el método más exacto en términos estadísticos, sino ofrecer insumos concretos para la toma de decisiones en política económica y comercio exterior.
+
+# 2. Objetivos
+
+## Objetivo general
+
+Desarrollar y comparar modelos de pronóstico de series de tiempo para estimar el valor mensual de exportaciones de Bolivia en el período enero 1992 a diciembre 2024, para generar proyecciones confiables hasta diciembre 2026.
+
+## Objetivos específicos
+
+* Preparar y estructurar la serie de exportaciones (1992–2024) para su análisis.
+* Ajustar y validar modelos ETS y ARIMA (manual y automático) evaluando su precisión con MAE, RMSE y MAPE.
+* Generar y analizar pronósticos a corto plazo (2025–2026) para la serie total y pronósticos de 12 meses de los dos principales productos.
+
+# 3. Motivación
+
+Bolivia es una economía tradicionalmente marcada por su elevada dependencia de las exportaciones de recursos naturales: hidrocarburos y minerales han llegado a aportar más del 35 % del PIB y cerca del 50 % de los ingresos fiscales en los últimos veinte años. Esta dependencia genera tres retos clave:
+
+### Volatilidad de ingresos
+
+La caída de los precios del petróleo en 2008–2009 redujo los ingresos por exportaciones en más de un 20 %, obligando a ajustes fiscales urgentes. En 2022, la contracción global de la demanda de gas natural provocó una disminución superior al 15 % en los valores mensuales, tensionando la balanza de pagos.
+
+### Estacionalidad acentuada
+
+Cada año, los meses de marzo a octubre registran picos de actividad y facturación, asociados a ciclos de extracción y logística; el resto del año muestra valores marcadamente inferiores. Comprender este patrón estacional es fundamental para planificar volúmenes de producción y reservas financieras.
+
+### Riesgo para la política pública
+
+Sin pronósticos confiables, el gobierno no puede formar reservas contracíclicas en años de bonanza ni prever recortes oportunos en años de caída. La ausencia de estudios locales que comparen ETS y ARIMA en este contexto limita la implementación de herramientas estadísticas efectivas.
+
+Por todo ello, este trabajo propone aplicar y contrastar métodos de suavizado exponencial y Box–Jenkins, generando pronósticos a corto plazo (2025–2026) no solo de la serie total, sino también de los dos productos de mayor volumen, “Extracción de hidrocarburos” y “Gas Natural”. Los resultados permitirán orientar la política económica hacia una gestión más proactiva y estable de los ingresos por exportaciones.
+
+# 4. Marco Teórico / Revisión de literatura
+
+La fundamentación metodológica de este estudio se apoya en tres desarrollos clave en el pronóstico de series de tiempo, seleccionados por su relevancia para economías basadas en exportaciones de commodities:
+
+## 4.1 Enfoque Box–Jenkins: ARIMA y SARIMA
+
+Box y Jenkins establecieron un proceso riguroso para construir modelos ARIMA, combinando componentes autoregresivos (AR), de media móvil (MA) y diferenciación (I) para alcanzar estacionariedad \[@Box1970]. La extensión estacional, SARIMA(p,d,q)(P,D,Q)\[s], añade términos (P,D,Q) que capturan patrones periódicos de longitud s (por ejemplo, 12 meses), un requisito esencial cuando la estacionalidad anual es prominente en las exportaciones de gas y minerales. Este enfoque permite modelar tanto la dinámica de corto plazo como la tendencia de largo plazo, incorporando además ciclos regulares que responden a calendarios de producción y demanda.
+
+## 4.2 Suavizado Exponencial en espacio-estado (ETS)
+
+Hyndman et al. formalizaron el marco ETS, que integra en un sistema de espacio-estado tres componentes—Error (E), Tendencia (T) y Estacionalidad (S)—cada uno pudiendo ser aditivo o multiplicativo \[@Hyndman2002]. La selección automática de la combinación óptima por criterios de información (AICc) confiere a los modelos ETS una gran flexibilidad para adaptarse a cambios de nivel y de estacionalidad, tal como ocurre cuando nuevas inversiones o políticas afectaron las exportaciones bolivianas en los últimos años. Asimismo, la formulación en espacio-estado facilita la cuantificación de la incertidumbre y la generación de intervalos de confianza robustos.
+
+## 4.3 Validación y métricas de precisión
+
+Para evaluar la idoneidad de cualquier modelo de pronóstico, Hyndman y Koehler propusieron un conjunto de métricas \[@Hyndman2006]:
+
+* MAE (Error Absoluto Medio) y RMSE (Raíz del Error Cuadrático Medio) miden la magnitud del error en las mismas unidades de la serie.
+* MAPE (Error Porcentual Medio Absoluto) permite comparar el error relativo entre series de distinta escala.
+* MASE (Error Absoluto Escalado) ofrece una referencia en relación a un modelo naïve, facilitando comparaciones intermercado.
+
+Estos indicadores serán el estándar para determinar qué modelo—ETS, ARIMA manual o ARIMA automático—ofrece la mejor combinación de precisión y estabilidad, teniendo en cuenta la alta volatilidad y estacionalidad propia de las exportaciones bolivianas.
+
+
+# 5. Descripción del dataset
+
+La información analizada en este trabajo proviene del Instituto Nacional de Estadística (INE) de Bolivia, correspondiente al módulo “Exportaciones según Actividad Económica y Producto por Año y Mes” y abarca el periodo completo de enero de 1992 a diciembre de 2024. A continuación se detallan sus características y la forma en que fue procesado:
+
+Cobertura temporal. La base original contiene 396 observaciones mensuales, desde el primer mes de 1992 hasta el último de 2024, lo que permite capturar tres décadas de comportamiento de las exportaciones.
+
+Estructura original. El archivo Excel presenta dos filas de encabezado dinde se encuentrna el año y los meses. A partir de la fila 6 las filas corresponden a 96 categorías de exportación (productos o actividades económicas), y las columnas de la B a la OG contienen los valores mensuales asociados.
+
+Variable principal. Cada celda bajo un mes específico contiene el valor en millones de dólares estadounidenses (USD) de las exportaciones para esa categoría en ese mes.
+
+# 6. Metodología
+
+La metodología adoptada en este estudio sigue un flujo de trabajo estructurado en cinco etapas principales, desde la preparación de los datos hasta el análisis de pronósticos específicos por producto. A continuación se describe en detalle cada fase del proceso, sin incluir fragmentos de código, para centrar la atención en los procedimientos y su justificación.
+
+## 6.1 Preparación y Transformación de Datos
+
+Lectura de encabezados duales
+
+El archivo de exportaciones contiene dos filas de encabezado: una con los años (1992–2024) y otra con los meses (enero–diciembre). Para consolidar estos valores se aplicó un método de propagación hacia adelante (forward‐fill) que completa los años para cada uno de los doce meses del año correspondiente.
+
+Construcción de etiquetas temporales
+
+Cada combinación de año y mes se transformó en una etiqueta de texto con formato “YYYY-MM”. Esto permitió mapear sin ambigüedad cada columna de la tabla original a un instante temporal reconocido por las funciones de series de tiempo en R.
+
+Reformateo de ancho a largo
+
+El dataset originalmente tenía una columna por mes. Se utilizó un procedimiento de “pivot” para convertir cada mes en una fila, de manera que el conjunto de datos resultara en tres columnas:
+
+* Detalle: nombre de la categoría o producto
+* Periodo: la etiqueta “YYYY-MM”
+* Valor: la cifra de exportación en millones de USD
+
+Limpieza de valores y tipos. Se eliminaron posibles valores faltantes de fechas, se convirtieron cadenas numéricas con coma decimal a valores numéricos, y se transformó la columna de fecha a un tipo de datos “year-month” para facilitar el análisis temporal.
+
+Generación de objetos de serie de tiempo. Para la serie total de exportaciones, se filtró la categoría “EXPORTACIONES” y se creó un objeto de clase ts con frecuencia mensual (12 observaciones por año).
+
+Para cada uno de los dos productos más exportados, se generaron objetos ts individuales con las mismas propiedades, preparados para el modelado y pronóstico.
+
+## 6.2 Análisis Exploratorio de Datos (EDA)
+
+* Serie completa.
+
+Se graficó la evolución mensual de los exportes totales, identificando visualmente tendencias de largo plazo y episodios de choque abrupto (años 2008–2010 y 2022).
+
+* Diferenciaciones
+
+Para atenuar la tendencia y centrar la serie, se examinaron la primera diferencia y la segunda diferencia. Estos gráficos evidenciaron la persistencia de saltos significativos asociados a eventos externos.
+
+* Diferencia estacional
+
+Al restar cada observación con la del mismo mes del año anterior, se aisló el componente estacional, mostrando patrones periódicos muy consistentes año tras año.
+
+* Tasas de crecimiento
+
+Se calcularon dos indicadores de crecimiento:
+
+Qt: cambio porcentual mensual.
+
+Gt: cambio porcentual interanual.
+
+Sus gráficos revelaron que, fuera de episodios extremos, las variaciones mensuales rondaban el ±20 %, mientras que los cambios interanuales podían superar el ±200 % en periodos de crisis.
+
+* Distribución estacional
+
+A través de un boxplot de cada mes, se visualizó cómo la mediana y la dispersión de las exportaciones variaban a lo largo del año, confirmando picos en primavera‐verano.
+
+* Heatmap anual–mes
+
+Se generó un mapa de calor que resume el valor promedio de exportaciones para cada combinación de año y mes, ilustrando la evolución de la intensidad estacional en diferentes épocas.
+
+## 6.3 Pruebas de Estacionariedad y Descomposición
+
+* Prueba ADF
+
+Se validó la necesidad de diferenciar la serie aplicando la prueba de Dickey–Fuller aumentada en tres niveles:
+
+Serie en nivel (no estacionaria).
+
+Primera diferencia (estacionaria).
+
+Diferencia estacional (lag 12) para confirmar la segunda integración estacional.
+
+* Descomposición aditiva
+
+Se aplicó un descomposición clásica que separa la serie en tres componentes:
+
+Tendencia: movilidad de largo plazo.
+
+Estacionalidad: patrón repetitivo anual.
+
+Residuos: variaciones no explicadas por los dos anteriores.
+
+Estos análisis fundamentan la elección de órdenes de diferenciación (d=1, D=1) y esclarecen la presencia de componentes estacionales obligatorios en los modelos.
+
+## 6.4 Ajuste y Validación de Modelos
+
+* Modelo ETS
+  Se estimaron automáticamente los parámetros de error, tendencia y estacionalidad en un espacio-estado, optimizando criterios de información.
+  Se validaron los residuos mediante pruebas de autocorrelación y Ljung–Box para detectar dependencia remanente.
+
+* Modelos ARIMA
+  Manual: se seleccionaron órdenes p, d, q y P, D, Q basados en la inspección de ACF/PACF y criterios AIC/BIC.
+  Automático: auto.arima() proporcionó un modelo comparable en precisión in-sample.
+  En ambos casos, se analizaron residuos y se ajustaron pronósticos a 24 meses.
+
+* Comparación de precisión
+  Se calcularon MAE, RMSE, MAPE y MASE para cada modelo.
+  Se presentaron en una tabla comparativa y se graficaron los pronósticos superpuestos a la serie original, facilitando la evaluación visual de errores y sesgos.
+
+## 6.5 Pronóstico y Análisis de Productos Líderes
+
+Finalmente, se identificaron los dos productos con mayor volumen total (extracción de hidrocarburos y gas natural) y se repitió el proceso de:
+
+* Construcción de serie de tiempo.
+* Exploración gráfica y pruebas ADF.
+* Ajuste de un modelo ARIMA automático.
+* Pronóstico a 12 meses y evaluación de métricas.
+
+Este enfoque permite contrastar el comportamiento agregado con el de sus componentes principales, ofreciendo recomendaciones más afinadas por sector productivo.
+
+# 7. Resultados y análisis
+
+En esta sección se integran los hallazgos fundamentales y su interpretación estratégica, haciendo referencia a las Figuras 1–17 del Anexo.
+
+## 7.1 Estadísticos Descriptivos (Figura 1)
+
+La dispersión de los valores mensuales (48.5–1 204.1 USD mn) y la asimetría positiva —donde la media (425.5) supera a la mediana (347.8)— indican que pocos meses de alta “bonanza” sesgan el promedio. Para la política fiscal, esto sugiere acumular reservas en esos picos para mitigar ingresos inferiores en periodos posteriores.
+
+## 7.2 Dinámica de Cambios
+
+Figura 2 demuestra que la primera diferencia centra la serie en cero, pero revela picos de 150 USD mn en los años 2008–2010 y 2022, lo que subraya la influencia de choques externos.
+
+La segunda diferencia (no mostrada) confirma que esos choques se atenúan rápidamente, lo que justifica incluir un componente de media móvil.
+
+Figura 4 compara Qt y Gt, mostrando que Qt (20 %) es idóneo para ajustes operativos diarios, mientras que Gt (>200 %) requiere instrumentos macroprudenciales de estabilidad.
+
+## 7.3 Patrón Estacional y Volatilidad
+
+Figura 3 resalta el patrón anual de picos entre primavera y verano: planificadores logísticos deben reforzar rutas y almacenamiento en esos meses.
+
+Figura 5 (boxplot) refleja que la mediana crece de 300 USD mn en enero a 450 USD mn en octubre, y que mayo–agosto presentan la mayor variabilidad de valores.
+
+## 7.4 Intensidad Temporal (Figura 6)
+
+El heatmap muestra cómo tras 2010 los meses centrales del año se vuelven sistemáticamente más intensos (tonos claros), evidenciando el impacto de inversiones en infraestructura y apertura de nuevos mercados.
+
+## 7.5 Estacionariedad y Descomposición
+
+Figura 7 descompone la serie en tendencia, estacionalidad y residuos. La tendencia se acelera desde 2018 (nuevos contratos de gas), la estacionalidad es constante y los residuos muestran outliers de choques regulatorios o logísticos.
+
+El ADF Test corrobora la no estacionariedad en nivel y la necesidad de d=1 y D=1 para I(0), justificando el uso de SARIMA.
+
+## 7.6 Diagnóstico y Pronóstico ETS
+
+Figura 8 evidencia que los residuos de ETS(A,A,A) mantienen autocorrelación significativa (p < 0.001), indicando que estos modelos no capturan bien los choques extremos.
+
+Figura 9 proyecta un crecimiento suave hasta 660 USD mn en diciembre 2026, adecuado para estimaciones conservadoras de largo plazo.
+
+## 7.7 Diagnóstico y Pronóstico ARIMA Manual
+
+Figura 10 muestra residuos de ARIMA(2,1,2)(1,1,1)[12] con autocorrelación remanente, aunque menor que ETS.
+
+Figura 11 anticipa picos más agresivos (740 USD mn), útil para contratos con ajustes de precio dinámicos.
+
+
+## 7.8 Diagnóstico y Pronóstico ARIMA Automático
+
+Figura 12 revela residuos autocorrelacionados de ARIMA(0,1,2)(0,0,2)[12] con drift, recomendando ARIMAX con precios externos.
+
+Figura 13 ofrece un pronóstico intermedio (690 USD mn), equilibrando precisión y suavidad.
+
+## 7.9 Comparativo de Pronósticos (Figura 14)
+
+La superposición de ETS, ARIMA manual y automático frente a la serie real muestra claramente que:
+
+ETS subestima picos,
+
+ARIMA manual reacciona con demasiado brío a rupturas,
+
+ARIMA automático logra un punto de equilibrio óptimo.
+
+## 7.10 Pronósticos Sectoriales
+
+Figura 15 (Extracción de hidrocarburos) presenta picos de 630 USD mn y desplomes en crisis, indicando su extrema sensibilidad.
+
+Figura 16 proyecta este subsector con MAPE de 20.8 %, subrayando la necesidad de coberturas de precio.
+
+Figura 17 (Gas Natural) arroja un MAPE de 16.3 %, confirmando su mayor estabilidad y predictibilidad para negociaciones de mediano plazo.
+
+Finalizando, comentamos que la combinación de métodos ETS y ARIMA, junto con la exploración de extensiones (ARIMAX, híbridos), permite adaptar estrategias de pronóstico a la heterogeneidad del sector exportador boliviano, optimizando la gestión de ingresos y reservas ante ciclos de demanda y choques externos.
+
+# 8. Conclusiones y recomendaciones
+
+Los modelos ARIMA (manual y automático) presentan una precisión ligeramente superior a los ETS en términos de MAE y MAPE, pero dejan autocorrelación residual significativa, evidenciando que no capturan completamente los choques externos ni la estacionalidad extrema (p-valor de Ljung–Box < 0.001).
+
+La serie total muestra una tendencia al alza persistente desde 2018 y una estacionalidad robusta (Fig. 7), mientras que, por subsector, la extracción de hidrocarburos exhibe alta incertidumbre (MAPE de 20.8 %) y el gas natural mayor predictibilidad (MAPE de 16.3 %) (Figs. 16–17).
+
+La asimetría de la distribución de exportaciones (media > mediana) y la alta volatilidad interanual (Gt > 200 %) exigen la construcción de reservas contracíclicas y mecanismos de cobertura de precio para suavizar los ingresos fiscales.
+
+## Recomendaciones
+
+* Incorporar variables exógenas
+  Extender los modelos ARIMA a ARIMAX, incluyendo precios internacionales del crudo y del gas, la tasa de cambio y variables macroeconómicas globales, con el fin de mejorar la captura de choques externos y reducir la autocorrelación residual.
+
+* Explorar enfoques híbridos y de machine learning
+  Evaluar marcos de Prophet para múltiples estacionalidades y modelos híbridos ARIMA–redes neuronales (p.ej. Zhang, 2003) para capturar no linealidades y mejorar la capacidad predictiva en escenarios de alta incertidumbre.
+
+* Implementar validación continua (“backtesting”)
+  Realizar pruebas rolling-origin cada trimestre, comparando pronósticos con datos reales y ajustando periódicamente los modelos, de modo que las estimaciones mantengan relevancia y precisión a lo largo del tiempo.
+
+* Diferenciar estrategias por subsector
+  Utilizar ETS como línea base conservadora para previsiones de largo plazo y ARIMA manual para decisiones tácticas de corto plazo, adaptando el enfoque a la mayor volatilidad de hidrocarburos y la relativa estabilidad del gas natural al diseñar políticas de exportación y contratos internacionales.
+
+\nocite{*}
+\newpage
+
+# Anexos
+
+A continuación se presentan las figuras mencionadas en el análisis. Todas fueron generadas como parte del proceso de exploración, validación y pronóstico de las exportaciones mensuales de Bolivia:
+
+**Figura 1.** Exportaciones mensuales totales 1992–2024  
+![](figura1.png){width=100%}
+
+**Figura 2.** Primera diferencia de la serie de exportaciones  
+![](figura2.png){width=100%}
+
+**Figura 3.** Diferencia estacional (lag 12)  
+![](figura3.png){width=100%}
+
+**Figura 4.** Tasas de crecimiento mensual (Qt) e interanual (Gt)  
+![](figura4.png){width=100%}
+
+**Figura 5.** Boxplot estacional de exportaciones mensuales  
+![](figura5.png){width=100%}
+
+**Figura 6.** Heatmap promedio anual por mes  
+![](figura6.png){width=100%}
+
+**Figura 7.** Descomposición clásica: tendencia, estacionalidad, residuos  
+![](figura7.png){width=100%}
+
+**Figura 8.** Diagnóstico de residuos ETS(A,A,A)  
+![](figura8.png){width=100%}
+
+**Figura 9.** Pronóstico ETS 2025–2026  
+![](figura9.png){width=100%}
+
+**Figura 10.** Diagnóstico de residuos ARIMA manual  
+![](figura10.png){width=100%}
+
+**Figura 11.** Pronóstico ARIMA manual  
+![](figura11.png){width=100%}
+
+**Figura 12.** Diagnóstico de residuos ARIMA automático  
+![](figura12.png){width=100%}
+
+**Figura 13.** Pronóstico ARIMA automático  
+![](figura13.png){width=100%}
+
+**Figura 14.** Comparación de los tres modelos sobre serie observada  
+![](figura14.png){width=100%}
+
+**Figura 15.** Serie de Extracción de hidrocarburos  
+![](figura15.png){width=100%}
+
+**Figura 16.** Pronóstico ARIMA para hidrocarburos  
+![](figura16.png){width=100%}
+
+**Figura 17.** Pronóstico ARIMA para gas natural  
+![](figura17.png){width=100%}
